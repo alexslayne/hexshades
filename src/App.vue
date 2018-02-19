@@ -6,11 +6,11 @@
         <div class="button-group" :style="{borderColor: colorStep(currentHex)}">
           <button @click="addHex">Save</button>
           <button @click="randomHex">Random</button>
-          <button>Delete</button>
+          <button @click="deleteHex">Delete</button>
         </div>
       </div>
       <div class="hexes">
-        <hex v-for="hex in hexes" :hex="hex" :textColor="colorStep(hex)" :key="hex.id"></hex>
+        <hex v-for="(hex, index) in hexes" :class="{active: index === activeHex}" :hex="hex" :textColor="colorStep(hex)" :current.sync="currentHex" :key="hex.id"></hex>
       </div>
     </sidebar>
     <shades :hexes="shades" :valid="validHex" :textColor="colorStep(currentHex)">
@@ -26,15 +26,23 @@ export default {
   data () {
     return {
       currentHex: '#ffffff',
+      activeHex: 0,
       hexes: []
     }
   },
   methods: {
     addHex: function() {
-      this.hexes.push(this.currentHex);
+      if (this.validHex) {
+        this.hexes.unshift(this.currentHex)
+        this.currentHex = this.hexes[0]
+      }
     },
     randomHex: function() {
       this.currentHex = tinycolor.random().toHexString()
+    },
+    deleteHex: function() {
+      this.hexes.splice(this.currentHex, 1)
+      this.currentHex = this.hexes[0]
     },
     colorStep: function(hex) {
       let newColor = tinycolor(hex)
@@ -115,6 +123,10 @@ body {
   margin-top: 1rem;
   display: flex;
   flex-flow: row wrap;
+}
+
+.active {
+  transform: scale(1.1);
 }
 
 @media screen and (max-width: 768px) {

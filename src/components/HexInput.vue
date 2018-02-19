@@ -1,5 +1,5 @@
 <template>
-    <input class="hex-input" type="text" v-bind:value="value" v-on:input="updateValue($event.target.value)" :style="{backgroundColor: value}">
+    <input class="hex-input" type="text" v-bind:value="value" v-on:keyup.enter="updateValue($event.target.value)" :style="{backgroundColor: value}">
 </template>
 
 <script>

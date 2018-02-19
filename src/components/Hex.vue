@@ -1,5 +1,5 @@
 <template>
-  <div class="hex">
+  <div class="hex" @click="setCurrentHex(hex)">
       <header :style="{backgroundColor: hex}"></header>
       <footer :style="{backgroundColor: textColor, color: hex}">
           {{hex}}
@@ -10,7 +10,12 @@
 <script>
 export default {
   name: 'Hex',
-  props: ['hex', 'textColor']
+  props: ['hex', 'textColor', 'current'],
+  methods: {
+    setCurrentHex: function (hex) {
+        this.$emit('update:current', hex)
+    }
+  }
 }
 </script>
 
