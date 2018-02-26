@@ -1,6 +1,7 @@
 <template>
   <div class="sidebar">
         <header>
+            <img class="logo" src="../assets/shades.svg" alt="Hex Shades">            
             <h1>Hexshades</h1>
         </header>
         <slot></slot>
@@ -21,11 +22,21 @@ export default {
     height: 100vh;
     color: #eee;
     box-sizing: border-box;
+    overflow-y: scroll;
 }
 header {
     padding: 1rem;
+    text-align: center; 
 }
-
+.logo {
+  padding: 10px 0 0 0;
+  width: 120px;
+}
+@media screen and (max-width: 768px) {
+    .sidebar {
+        height: auto;
+    }
+}
 </style>
 
 

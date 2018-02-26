@@ -1,33 +1,55 @@
 <template>
   <div id="app">
-    <sidebar :currentHex="currentHex" :v-model="currentHex">
-      <div class="container" :style="{color: colorStep(currentHex), backgroundColor: currentHex}">
-        <hex-input v-model="currentHex"/>
+    <transition name="fade">
+      <div class="notification" v-show="showNotification">
+        <transition name="zoom">
+          <div class="notification-content" v-show="showNotification">
+            Copied <strong>{{copiedColor}}</strong>!
+          </div>
+        </transition>
+      </div>
+    </transition>
+    <sidebar :currentHex="currentHex">
+      <div class="sidebar-input" :class="{invalid: !validHex}" :style="{color: colorStep(currentHex), backgroundColor: currentHex}">
+        <hex-input v-model="currentHex" :valid="validHex"/>
         <div class="button-group" :style="{borderColor: colorStep(currentHex)}">
-          <button @click="addHex">Save</button>
-          <button @click="randomHex">Random</button>
-          <button @click="deleteHex">Delete</button>
+          <button @click="addHex">
+            <save-icon></save-icon><br>
+            Save
+          </button>
+          <button @click="randomHex">
+            <shuffle-icon></shuffle-icon><br>
+            Random
+          </button>
+          <button @click="deleteHex">
+            <trash2-icon></trash2-icon><br>
+            Delete
+          </button>
         </div>
       </div>
-      <div class="hexes">
-        <hex v-for="(hex, index) in hexes" :class="{active: index === activeHex}" :hex="hex" :textColor="colorStep(hex)" :current.sync="currentHex" :key="hex.id"></hex>
+      <div class="hexes" v-if="hexes.length > 0">
+        <hex v-for="(hex, index) in hexes" :class="{active: index === activeHex}" :hex="hex" :textColor="textColor(hex)" :index="index" :current.sync="currentHex" :active.sync="activeHex" :key="hex.id"></hex>
       </div>
     </sidebar>
-    <shades :hexes="shades" :valid="validHex" :textColor="colorStep(currentHex)">
+    <shades :hexes="shades" :valid="validHex" :current="currentHex" :textColor="colorStep(currentHex)">
     </shades>
   </div>
 </template>
 
 <script>
-var tinycolor = require('tinycolor2')
-
+import tinycolor from 'tinycolor2'
+import { SaveIcon, Trash2Icon, ShuffleIcon, HeartIcon } from 'vue-feather-icons'
+import Clipboard from 'clipboard'
 export default {
   name: 'app',
   data () {
     return {
       currentHex: '#ffffff',
       activeHex: 0,
-      hexes: []
+      hexes: [],
+      clipboard: null,
+      copiedColor: null,
+      showNotification: false
     }
   },
   methods: {
@@ -35,16 +57,37 @@ export default {
       if (this.validHex) {
         this.hexes.unshift(this.currentHex)
         this.currentHex = this.hexes[0]
+        this.activeHex = 0
       }
     },
     randomHex: function() {
       this.currentHex = tinycolor.random().toHexString()
     },
     deleteHex: function() {
-      this.hexes.splice(this.currentHex, 1)
-      this.currentHex = this.hexes[0]
+      this.hexes.splice(this.activeHex, 1)
+      let nextActive = ((this.activeHex < 1) ? 0 : this.activeHex - 1)
+      this.activeHex = nextActive
+      var self = this
+      if (self.hexes.length > 0) {
+        self.currentHex = self.hexes[nextActive]
+      } else {
+        self.currentHex = '#ffffff'
+      }
     },
     colorStep: function(hex) {
+      let newColor = tinycolor(hex)
+      if (this.validHex) {
+        if (newColor.isDark()) {
+          newColor = newColor.lighten(50).toString()
+        } else {
+          newColor = newColor.darken(50).toString()
+        }
+        return newColor
+      } else {
+        return '#333333'
+      }
+    },
+    textColor: function(hex) {
       let newColor = tinycolor(hex)
       if (newColor.isDark()) {
         newColor = newColor.lighten(50).toString()
@@ -52,21 +95,40 @@ export default {
         newColor = newColor.darken(50).toString()
       }
       return newColor
-    }
+    },
+    logCopy() {
+      this.showNotification = true
+      setTimeout(() => {
+          this.showNotification = false;
+      }, 750);
+    },
+    createClipboard() {
+      var self = this;
+      if (self.clipboard.length) {
+        self.clipboard.destroy()
+      }
+      self.clipboard = new Clipboard('.shade')
+      self.clipboard.on('success', function (e) {
+        console.info('Text:', e.text)
+        self.copiedColor = e.text
+        self.logCopy()
+      })
+    },
   },
   computed: {
     validHex: function () {
-      return this.tinyHex.isValid()
+      var self = this
+      if (!self.currentHex.includes('#')) {
+        self.currentHex = '#' + self.currentHex  
+      }
+      if (this.currentHex.length == 5) {
+        return false;
+      } else {
+        return this.tinyHex.isValid()
+      }
     },
     tinyHex: function() {
       return(tinycolor(this.currentHex))
-    },
-    inputColor: function() {
-      if (this.validHex === true) {
-        
-      } else {
-        return '#333333'
-      }
     },
     shades: function() {
       let initialLight = tinycolor(this.currentHex)
@@ -85,11 +147,31 @@ export default {
       })
       return shades
     }
+  },
+  components: {
+    SaveIcon, ShuffleIcon, Trash2Icon, HeartIcon
+  },
+  updated() {
+    var self = this;
+    if (self.clipboard !== null) {
+      self.clipboard.destroy()
+    }
+    self.clipboard = new Clipboard('.shade')
+    self.clipboard.on('success', function (e) {
+      console.info('Text:', e.text)
+      self.copiedColor = e.text
+      self.logCopy()
+    })
+    console.log(this.clipboard)
+  },
+  mounted() {
+    this.randomHex()
   }
 }
 </script>
 
 <style lang="scss">
+
 body {
   margin: 0;
   padding: 0;
@@ -105,6 +187,10 @@ body {
   align-content: stretch;
 }
 
+.sidebar-input {
+  transition: background-color .3s ease-out;
+}
+
 .button-group {
   display: flex;
   border-top: 1px dashed #333;
@@ -117,6 +203,12 @@ body {
   flex: 1;
   border: none;
   color: inherit;
+  &:focus {
+    box-shadow: none;
+    border: none;
+    -webkit-appearance: none;
+    outline: none;
+  }
 }
 
 .hexes {
@@ -126,8 +218,56 @@ body {
 }
 
 .active {
-  transform: scale(1.1);
+  transform: scale(.9);
 }
+
+.invalid {
+  background-color: #fff !important;
+  color: #333 !important;
+}
+
+.notification {
+  display: flex;
+  z-index: 100;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  align-items: center;
+  justify-content: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+.notification-content {
+  background-color: #fff;
+  font-size: 1.4rem;
+  text-align: center;
+  padding: 1rem 2rem;
+  align-content: center;
+  color: #333;
+  border-radius: 8px;
+  transform: scale(1);
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .3s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
+
+.zoom-enter-active, .zoom-leave-active {
+  transition: all .3s;
+}
+.zoom-enter, .zoom-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  transform: scale(.5);
+}
+
 
 @media screen and (max-width: 768px) {
   #app {

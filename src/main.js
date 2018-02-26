@@ -11,7 +11,8 @@ import Hex from './components/Hex.vue'
   Shades,
   Sidebar,
   HexInput,
-  Hex
+  Hex,
+
 ].forEach(Component => {
   Vue.component(Component.name, Component)
 })

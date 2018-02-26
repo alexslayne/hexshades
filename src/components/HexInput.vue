@@ -1,11 +1,11 @@
 <template>
-    <input class="hex-input" type="text" v-bind:value="value" v-on:keyup.enter="updateValue($event.target.value)" :style="{backgroundColor: value}">
+    <input class="hex-input" :class="{invalid: !valid}" type="text" v-bind:value="value" v-on:keyup.enter="updateValue($event.target.value)" @input="updateValue($event.target.value)">
 </template>
 
 <script>
 export default {
   name: 'HexInput',
-  props: ['value'],
+  props: ['value', 'valid'],
   methods: {
     updateValue: function (value) {
       this.$emit('input', value);
@@ -16,14 +16,19 @@ export default {
 
 <style lang="scss">
 .hex-input {
-    color: inherit;
-    box-sizing: border-box;
-    width: 100%;
-    padding: 1rem 1rem;
-    margin: 0;
-    border: none;
-    -webkit-appearance: none;
-    font-size: 1.5rem;
-    text-align: center;
+  height: 6rem;
+  color: inherit;
+  background-color: transparent;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 1rem 1rem;
+  margin: 0;
+  border: none;
+  -webkit-appearance: none;
+  font-size: 1.5rem;
+  text-align: center;
+  &:focus {
+    outline: none;
+  }
 }
 </style>
