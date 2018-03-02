@@ -1,14 +1,5 @@
 <template>
   <div id="app">
-    <transition name="fade">
-      <div class="notification" v-show="showNotification">
-        <transition name="zoom">
-          <div class="notification-content" v-show="showNotification">
-            Copied <strong>{{copiedColor}}</strong>!
-          </div>
-        </transition>
-      </div>
-    </transition>
     <sidebar :currentHex="currentHex">
       <div class="sidebar-input" :class="{invalid: !validHex}" :style="{color: colorStep(currentHex), backgroundColor: currentHex}">
         <hex-input v-model="currentHex" :valid="validHex"/>
@@ -33,6 +24,15 @@
     </sidebar>
     <shades :hexes="shades" :valid="validHex" :current="currentHex" :textColor="colorStep(currentHex)">
     </shades>
+    <transition name="fade">
+      <div class="notification" v-show="showNotification">
+        <transition name="zoom">
+          <div class="notification-content" v-show="showNotification">
+            Copied <strong>{{copiedColor}}</strong>!
+          </div>
+        </transition>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -64,10 +64,10 @@ export default {
       this.currentHex = tinycolor.random().toHexString()
     },
     deleteHex: function() {
-      this.hexes.splice(this.activeHex, 1)
+      let self = this
+      self.hexes.splice(this.activeHex, 1)
       let nextActive = ((this.activeHex < 1) ? 0 : this.activeHex - 1)
-      this.activeHex = nextActive
-      var self = this
+      self.activeHex = nextActive
       if (self.hexes.length > 0) {
         self.currentHex = self.hexes[nextActive]
       } else {
@@ -103,13 +103,12 @@ export default {
       }, 750);
     },
     createClipboard() {
-      var self = this;
-      if (self.clipboard.length) {
+      let self = this;
+      if (self.clipboard !== null) {
         self.clipboard.destroy()
       }
       self.clipboard = new Clipboard('.shade')
       self.clipboard.on('success', function (e) {
-        console.info('Text:', e.text)
         self.copiedColor = e.text
         self.logCopy()
       })
@@ -117,7 +116,7 @@ export default {
   },
   computed: {
     validHex: function () {
-      var self = this
+      let self = this
       if (!self.currentHex.includes('#')) {
         self.currentHex = '#' + self.currentHex  
       }
@@ -152,17 +151,7 @@ export default {
     SaveIcon, ShuffleIcon, Trash2Icon, HeartIcon
   },
   updated() {
-    var self = this;
-    if (self.clipboard !== null) {
-      self.clipboard.destroy()
-    }
-    self.clipboard = new Clipboard('.shade')
-    self.clipboard.on('success', function (e) {
-      console.info('Text:', e.text)
-      self.copiedColor = e.text
-      self.logCopy()
-    })
-    console.log(this.clipboard)
+    this.createClipboard()
   },
   mounted() {
     this.randomHex()
