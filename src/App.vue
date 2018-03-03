@@ -2,19 +2,19 @@
   <div id="app">
     <sidebar :currentHex="currentHex">
       <div class="sidebar-input" :class="{invalid: !validHex}" :style="{color: colorStep(currentHex), backgroundColor: currentHex}">
-        <hex-input v-model="currentHex" :valid="validHex"/>
+        <hex-input v-model="currentHex" :valid="validHex" v-on:enterAdd="addHex"/>
         <div class="button-group" :style="{borderColor: colorStep(currentHex)}">
           <button @click="addHex">
             <save-icon></save-icon><br>
-            Save
+            <span>Save</span>
           </button>
           <button @click="randomHex">
             <shuffle-icon></shuffle-icon><br>
-            Random
+            <span>Random</span>
           </button>
           <button @click="deleteHex">
             <trash2-icon></trash2-icon><br>
-            Delete
+            <span>Delete</span>
           </button>
         </div>
       </div>
@@ -58,6 +58,7 @@ export default {
         this.hexes.unshift(this.currentHex)
         this.currentHex = this.hexes[0]
         this.activeHex = 0
+        this.saveHexes()
       }
     },
     randomHex: function() {
@@ -70,8 +71,10 @@ export default {
       self.activeHex = nextActive
       if (self.hexes.length > 0) {
         self.currentHex = self.hexes[nextActive]
+        self.saveHexes()
       } else {
         self.currentHex = '#ffffff'
+        self.saveHexes()
       }
     },
     colorStep: function(hex) {
@@ -113,6 +116,16 @@ export default {
         self.logCopy()
       })
     },
+    fetchHexes() {
+      let hexes = JSON.parse(localStorage.getItem('hex-shades'))
+      if (hexes == null || hexes === undefined) {
+        hexes = []
+      }
+      return hexes
+    },
+    saveHexes() {
+      localStorage.setItem('hex-shades', JSON.stringify(this.hexes))
+    }
   },
   computed: {
     validHex: function () {
@@ -120,7 +133,8 @@ export default {
       if (!self.currentHex.includes('#')) {
         self.currentHex = '#' + self.currentHex  
       }
-      if (this.currentHex.length == 5) {
+      if (this.currentHex.length == 5 || this.currentHex.length > 7) {
+        self.currentHex = self.currentHex.substring(0, 7)
         return false;
       } else {
         return this.tinyHex.isValid()
@@ -151,10 +165,16 @@ export default {
     SaveIcon, ShuffleIcon, Trash2Icon, HeartIcon
   },
   updated() {
-    this.createClipboard()
+    this.createClipboard();
   },
   mounted() {
-    this.randomHex()
+    let self = this
+    self.hexes = self.fetchHexes()
+    if (self.hexes.length === 0) {
+      self.randomHex()
+    } else {
+      self.currentHex = self.hexes[0]
+    }
   }
 }
 </script>
@@ -198,6 +218,12 @@ body {
     -webkit-appearance: none;
     outline: none;
   }
+}
+
+.button-group button > span {
+  font-size: .9rem;
+  display: block;
+  padding-top: .5rem;
 }
 
 .hexes {

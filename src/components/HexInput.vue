@@ -1,5 +1,5 @@
 <template>
-    <input class="hex-input" :class="{invalid: !valid}" type="text" v-bind:value="value" v-on:keyup.enter="updateValue($event.target.value)" @input="updateValue($event.target.value)">
+    <input class="hex-input" :class="{invalid: !valid}" type="text" v-bind:value="value" v-on:keyup.enter="enterAdd()" @input="updateValue($event.target.value)">
 </template>
 
 <script>
@@ -9,6 +9,9 @@ export default {
   methods: {
     updateValue: function (value) {
       this.$emit('input', value);
+    },
+    enterAdd: function() {
+      this.$emit('enterAdd', this);
     }
   }
 }
