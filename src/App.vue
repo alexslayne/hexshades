@@ -27,8 +27,7 @@
     <transition name="fade">
       <div class="notification" v-show="showNotification">
         <transition name="zoom">
-          <div class="notification-content" v-show="showNotification">
-            Copied <strong>{{copiedColor}}</strong>!
+          <div class="notification-content" v-show="showNotification" v-html="notificationText">
           </div>
         </transition>
       </div>
@@ -48,7 +47,7 @@ export default {
       activeHex: 0,
       hexes: [],
       clipboard: null,
-      copiedColor: null,
+      notificationText: null,
       showNotification: false
     }
   },
@@ -99,7 +98,8 @@ export default {
       }
       return newColor
     },
-    logCopy() {
+    popNotification(notification) {
+      this.notificationText = notification
       this.showNotification = true
       setTimeout(() => {
           this.showNotification = false;
@@ -107,14 +107,18 @@ export default {
     },
     createClipboard() {
       let self = this;
-      if (self.clipboard !== null) {
-        self.clipboard.destroy()
+      if (Clipboard.isSupported()) {
+        if (self.clipboard !== null) {
+          self.clipboard.destroy()
+        }
+        self.clipboard = new Clipboard('.shade')
+        self.clipboard.on('success', function (e) {
+          self.popNotification('Copied ' + '<strong>' + e.text + '</strong>!')
+        })
+        self.clipboard.on('error', function(e) {
+            self.popNotification('Error: ' + '<strong>' + e.text + '</strong>')
+        });
       }
-      self.clipboard = new Clipboard('.shade')
-      self.clipboard.on('success', function (e) {
-        self.copiedColor = e.text
-        self.logCopy()
-      })
     },
     fetchHexes() {
       let hexes = JSON.parse(localStorage.getItem('hex-shades'))

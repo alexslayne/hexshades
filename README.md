@@ -1,6 +1,6 @@
 # hexshades
 
-> A Vue.js project
+> A color tool for generating a range of shades from lightest to darkest, written in [Vue.js](https://vuejs.org/) and inspired by [0to255](http://www.0to255.com/).
 
 ## Build Setup
 
