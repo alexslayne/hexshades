@@ -116,7 +116,7 @@ export default {
           self.popNotification('Copied ' + '<strong>' + e.text + '</strong>!')
         })
         self.clipboard.on('error', function(e) {
-            self.popNotification('Error: ' + '<strong>' + e.text + '</strong>')
+            self.popNotification('Error: ' + '<strong>' + e.text + '</strong>!')
         });
       }
     },
